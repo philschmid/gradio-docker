@@ -27,10 +27,10 @@ jobs:
     - id: build
       name: build docker image
       run: |
-        docker build -t philschmid/gradio-api:gpu -f docker/Dockerfile.gpu .
+        docker build -t philschmi/gradio-api:gpu -f docker/Dockerfile.gpu .
     
     - id: push
       name: push image to registry
       if: github.event_name == 'push'
       run: |
-        docker push --all-tags philschmid/gradio-api
+        docker push --all-tags philschmi/gradio-api

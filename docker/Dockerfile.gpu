@@ -1,0 +1,31 @@
+FROM nvidia/cuda:11.5.1-base-ubuntu20.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+    && apt-get -y upgrade --only-upgrade systemd openssl cryptsetup \
+    && apt-get install -y \
+    bzip2 \
+    curl \
+    tar \
+    && apt-get clean autoremove --yes \
+    && rm -rf /var/lib/{apt,dpkg,cache,log}
+
+# install micromamba
+ENV MAMBA_ROOT_PREFIX=/opt/conda
+ENV PATH=/opt/conda/bin:$PATH
+RUN curl -L https://micromamba.snakepit.net/api/micromamba/linux-64/latest | tar -xj "bin/micromamba" \
+    && touch /root/.bashrc \
+    && ./bin/micromamba shell init -s bash -p /opt/conda  \
+    && grep -v '[ -z "\$PS1" ] && return' /root/.bashrc  > /opt/conda/bashrc
+
+WORKDIR /repository
+
+# install python dependencies
+COPY conda/gpu.environment.yaml /repository/environment.yaml
+RUN micromamba install -y -n base -f environment.yaml \
+    && rm environment.yaml \
+    && micromamba clean --all --yes
+
+
+ENTRYPOINT [ "python3", "app.py" ]
